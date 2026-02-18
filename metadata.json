@@ -1,0 +1,7 @@
+{
+  "name": "Prescription: AI Medical Bill & Prescription Explainer",
+  "description": "An MVP for Indian patients to simplify complex medical documents, bills, and prescriptions using Gemini AI. Translates medical jargon into plain English/Hindi-context and flags unnecessary hospital charges.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
