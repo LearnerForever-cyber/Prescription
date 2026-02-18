@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout } from './components/Layout';
-import { LandingPage } from './components/LandingPage';
-import { AuthForms } from './components/AuthForms';
-import { FileUploader } from './components/FileUploader';
-import { AnalysisView } from './components/AnalysisView';
-import { analyzeMedicalDocument } from './services/geminiService';
-import { AnalysisState, User, MedicalAnalysis } from './types';
+import { Layout } from './components/Layout.tsx';
+import { LandingPage } from './components/LandingPage.tsx';
+import { AuthForms } from './components/AuthForms.tsx';
+import { FileUploader } from './components/FileUploader.tsx';
+import { AnalysisView } from './components/AnalysisView.tsx';
+import { analyzeMedicalDocument } from './services/geminiService.ts';
+import { AnalysisState, User, MedicalAnalysis } from './types.ts';
 import { Loader2, AlertCircle, Sparkles, History, MapPin } from 'lucide-react';
 
 const App: React.FC = () => {

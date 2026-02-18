@@ -1,8 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { DocumentType, MedicalAnalysis } from "../types";
+import { DocumentType, MedicalAnalysis } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
@@ -96,7 +96,6 @@ export const analyzeMedicalDocument = async (
   mimeType: string,
   cityTier: string = 'Tier-1'
 ): Promise<MedicalAnalysis> => {
-  // Always use the latest flash model for general document analysis
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
@@ -132,13 +131,8 @@ export const analyzeMedicalDocument = async (
 
   const text = response.text;
   if (!text) {
-    throw new Error("No analysis generated from the model.");
+    throw new Error("No analysis generated.");
   }
 
-  try {
-    return JSON.parse(text) as MedicalAnalysis;
-  } catch (e) {
-    console.error("Failed to parse Gemini response as JSON:", text);
-    throw new Error("Invalid analysis format received from AI.");
-  }
+  return JSON.parse(text) as MedicalAnalysis;
 };
