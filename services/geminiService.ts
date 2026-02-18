@@ -59,7 +59,8 @@ const ANALYSIS_SCHEMA = {
         },
         isOvercharged: { type: Type.BOOLEAN },
         tierComparison: { type: Type.STRING }
-      }
+      },
+      required: ['procedureName', 'expectedRange', 'isOvercharged', 'tierComparison']
     },
     billAnalysis: {
       type: Type.OBJECT,
@@ -95,26 +96,31 @@ export const analyzeMedicalDocument = async (
   mimeType: string,
   cityTier: string = 'Tier-1'
 ): Promise<MedicalAnalysis> => {
-  const model = ai.models.generateContent({
+  // Always use the latest flash model for general document analysis
+  const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { inlineData: { data: base64Data, mimeType: mimeType } },
         {
-          text: `You are an expert Indian Medical Finance Consultant.
-          Analyze the attached document for:
-          1. Document Type: (Prescription, Bill, Lab, Insurance).
-          2. GENERIC SAVINGS (FOR PRESCRIPTIONS): Identify branded Indian medicines (e.g., Augmentin, Lipitor). Provide Jan Aushadhi or generic equivalents and estimated price differences (₹ Branded vs ₹ Generic).
-          3. COST BENCHMARKING (FOR BILLS): If a procedure/surgery is detected, compare the cost against standard Indian ranges for ${cityTier} cities.
-             - Cataract: ₹15k - ₹40k
-             - C-Section: ₹50k - ₹1.2L
-             - Knee Replacement: ₹1.5L - ₹3L
-             - Standard Consultation: ₹500 - ₹1500
-          4. OVERCHARGES: Flag "Consumables" or "Service charges" that exceed 10% of the total bill.
-          5. NEXT STEPS: Suggest "Switch to Generic", "Appeal Overcharge", or "Submit TPA claim".
-
-          IMPORTANT: Use Indian numbering (Lakhs). Always add a disclaimer that switching medicines requires doctor consultation.
-          Respond strictly in JSON according to schema.`
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        },
+        {
+          text: `You are an expert Indian Medical Consultant. 
+          Context: Patient is in a ${cityTier} city in India.
+          Analyze this medical document. 
+          1. Determine Document Type (Prescription, Bill, Lab, Insurance Rejection).
+          2. Explain medical jargon in simple English.
+          3. If Prescription: Identify BRANDED medicines and suggest Jan Aushadhi (Generic) alternatives with estimated price difference in INR (₹).
+          4. If Bill: Benchmark costs against Indian averages for ${cityTier}. 
+             Standard surgery ranges for reference: Cataract ₹20k-40k, C-Section ₹60k-1L, Dialysis ₹2.5k-5k.
+          5. Flag any unusually high charges or unnecessary "miscellaneous" fees.
+          6. Recommend actionable next steps (e.g., 'Consult for Generic switch', 'Appeal Insurance').
+          
+          ALWAYS add a clear disclaimer: 'Consult your doctor before making changes to medication.'
+          Format output strictly as JSON according to the provided schema.`
         }
       ]
     },
@@ -124,8 +130,15 @@ export const analyzeMedicalDocument = async (
     }
   });
 
-  const response = await model;
-  const resultText = response.text;
-  if (!resultText) throw new Error("Analysis failed.");
-  return JSON.parse(resultText) as MedicalAnalysis;
+  const text = response.text;
+  if (!text) {
+    throw new Error("No analysis generated from the model.");
+  }
+
+  try {
+    return JSON.parse(text) as MedicalAnalysis;
+  } catch (e) {
+    console.error("Failed to parse Gemini response as JSON:", text);
+    throw new Error("Invalid analysis format received from AI.");
+  }
 };
