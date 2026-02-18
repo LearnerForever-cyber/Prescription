@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { DocumentType, MedicalAnalysis } from "../types.ts";
 
@@ -62,30 +61,6 @@ const ANALYSIS_SCHEMA = {
       },
       required: ['procedureName', 'expectedRange', 'isOvercharged', 'tierComparison']
     },
-    billAnalysis: {
-      type: Type.OBJECT,
-      properties: {
-        totalAmount: { type: Type.STRING },
-        potentialOvercharges: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              item: { type: Type.STRING },
-              reason: { type: Type.STRING },
-              suggestedAction: { type: Type.STRING }
-            }
-          }
-        }
-      }
-    },
-    insuranceInsights: {
-      type: Type.OBJECT,
-      properties: {
-        rejectionReason: { type: Type.STRING },
-        appealAdvice: { type: Type.STRING }
-      }
-    },
     nextSteps: { type: Type.ARRAY, items: { type: Type.STRING } }
   },
   required: ['documentType', 'summary', 'simplifiedTerms', 'criticalFindings', 'nextSteps']
@@ -116,10 +91,9 @@ export const analyzeMedicalDocument = async (
           4. If Bill: Benchmark costs against Indian averages for ${cityTier}. 
              Standard surgery ranges for reference: Cataract ₹20k-40k, C-Section ₹60k-1L, Dialysis ₹2.5k-5k.
           5. Flag any unusually high charges or unnecessary "miscellaneous" fees.
-          6. Recommend actionable next steps (e.g., 'Consult for Generic switch', 'Appeal Insurance').
-          
+          6. Recommend actionable next steps.
           ALWAYS add a clear disclaimer: 'Consult your doctor before making changes to medication.'
-          Format output strictly as JSON according to the provided schema.`
+          Format output strictly as JSON.`
         }
       ]
     },
@@ -130,9 +104,6 @@ export const analyzeMedicalDocument = async (
   });
 
   const text = response.text;
-  if (!text) {
-    throw new Error("No analysis generated.");
-  }
-
+  if (!text) throw new Error("No analysis generated.");
   return JSON.parse(text) as MedicalAnalysis;
 };

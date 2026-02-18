@@ -1,4 +1,3 @@
-
 export enum DocumentType {
   PRESCRIPTION = 'PRESCRIPTION',
   LAB_REPORT = 'LAB_REPORT',
@@ -44,18 +43,6 @@ export interface MedicalAnalysis {
   }[];
   genericAlternatives?: GenericAlternative[];
   costInsights?: CostInsight;
-  billAnalysis?: {
-    totalAmount: string;
-    potentialOvercharges: {
-      item: string;
-      reason: string;
-      suggestedAction: string;
-    }[];
-  };
-  insuranceInsights?: {
-    rejectionReason?: string;
-    appealAdvice?: string;
-  };
   nextSteps: string[];
 }
 
