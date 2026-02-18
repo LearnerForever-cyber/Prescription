@@ -1,7 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { DocumentType, MedicalAnalysis } from "../types.ts";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
@@ -71,8 +70,12 @@ export const analyzeMedicalDocument = async (
   mimeType: string,
   cityTier: string = 'Tier-1'
 ): Promise<MedicalAnalysis> => {
+  // CRITICAL: New instance before call ensures latest credentials
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // Using gemini-3-pro-preview as medical document analysis is a complex reasoning task
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: {
       parts: [
         {
@@ -90,7 +93,7 @@ export const analyzeMedicalDocument = async (
           3. If Prescription: Identify BRANDED medicines and suggest Jan Aushadhi (Generic) alternatives with estimated price difference in INR (₹).
           4. If Bill: Benchmark costs against Indian averages for ${cityTier}. 
              Standard surgery ranges for reference: Cataract ₹20k-40k, C-Section ₹60k-1L, Dialysis ₹2.5k-5k.
-          5. Flag any unusually high charges or unnecessary "miscellaneous" fees.
+          5. Flag any unusually high charges or unnecessary "miscellaneous" fees like excessive RMO charges or consumable overheads.
           6. Recommend actionable next steps.
           ALWAYS add a clear disclaimer: 'Consult your doctor before making changes to medication.'
           Format output strictly as JSON.`
@@ -103,7 +106,8 @@ export const analyzeMedicalDocument = async (
     }
   });
 
+  // Extract text using the .text property
   const text = response.text;
-  if (!text) throw new Error("No analysis generated.");
+  if (!text) throw new Error("No analysis generated from the document.");
   return JSON.parse(text) as MedicalAnalysis;
 };
