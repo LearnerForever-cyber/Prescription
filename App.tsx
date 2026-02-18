@@ -23,7 +23,6 @@ const App: React.FC = () => {
   });
   const [history, setHistory] = useState<MedicalAnalysis[]>([]);
 
-  // Persistent session logic
   useEffect(() => {
     const initApp = () => {
       try {
@@ -48,7 +47,6 @@ const App: React.FC = () => {
   }, []);
 
   const handleAuthSubmit = async (data: any) => {
-    // Simulate auth
     const newUser: User = { 
       id: Math.random().toString(36).substr(2, 9), 
       name: data.name || data.email.split('@')[0], 
@@ -95,7 +93,6 @@ const App: React.FC = () => {
 
   const handleAnalyze = async () => {
     if (!state.preview || !state.file) return;
-    
     setState(prev => ({ ...prev, isAnalyzing: true, error: null }));
     
     try {
@@ -103,7 +100,7 @@ const App: React.FC = () => {
       const mimeType = state.file.type;
       const analysisResult = await analyzeMedicalDocument(base64Data, mimeType, cityTier);
       
-      const enrichedResult = {
+      const enrichedResult: MedicalAnalysis = {
         ...analysisResult,
         id: Math.random().toString(36).substr(2, 9),
         timestamp: Date.now()
@@ -181,7 +178,6 @@ const App: React.FC = () => {
     <Layout user={user} onLogout={handleLogout} onLogoClick={goHome}>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6 no-print">
              <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                <h3 className="font-bold text-slate-800 mb-4 flex items-center">
@@ -196,14 +192,13 @@ const App: React.FC = () => {
                  <option value="Tier-2">Tier 2 (Pune, Jaipur, Lucknow)</option>
                  <option value="Tier-3">Tier 3 / Rural Cities</option>
                </select>
-               <p className="text-[10px] text-slate-400 mt-2 italic">*Benchmarks adjust based on standard city living costs.</p>
              </div>
              
              <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                <h3 className="font-bold text-slate-800 mb-4 flex items-center">
                  <History className="w-5 h-5 mr-2 text-blue-600" /> Recent History
                </h3>
-               <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+               <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                  {history.length > 0 ? history.map(h => (
                    <button 
                      key={h.id} 
@@ -212,65 +207,54 @@ const App: React.FC = () => {
                    >
                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">{h.documentType.replace('_', ' ')}</p>
                      <p className="text-sm font-semibold truncate text-slate-800">{h.summary}</p>
-                     <p className="text-[9px] text-slate-400 mt-1">{h.timestamp ? new Date(h.timestamp).toLocaleDateString() : 'Recent'}</p>
                    </button>
                  )) : (
-                   <p className="text-sm text-slate-400 py-4 text-center">No previous scans found.</p>
+                   <p className="text-sm text-slate-400 text-center py-4">No scans yet.</p>
                  )}
                </div>
              </div>
           </div>
 
-          {/* Analyzer Area */}
           <div className="lg:col-span-8">
             {state.isAnalyzing ? (
               <div className="bg-white p-20 rounded-[3rem] text-center border border-slate-100 shadow-sm flex flex-col items-center">
-                <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-25"></div>
-                  <Loader2 className="w-16 h-16 animate-spin text-blue-600 relative z-10" />
-                </div>
+                <Loader2 className="w-16 h-16 animate-spin text-blue-600 mb-6" />
                 <h2 className="text-2xl font-bold text-slate-800">Prescription IQ Scanning...</h2>
-                <p className="text-slate-500 mt-2 max-w-xs mx-auto">Reading medical codes, comparing prices, and checking for savings.</p>
               </div>
             ) : state.result ? (
               <div className="space-y-4">
                 <button 
                   onClick={() => setState(p => ({ ...p, result: null, file: null, preview: null }))} 
-                  className="mb-2 text-blue-600 font-bold hover:text-blue-700 transition-colors flex items-center space-x-1 no-print"
+                  className="mb-2 text-blue-600 font-bold flex items-center space-x-1 no-print"
                 >
-                  <span>&larr; Analyze Another Document</span>
+                  <span>&larr; New Scan</span>
                 </button>
                 <AnalysisView analysis={state.result} />
               </div>
             ) : (
               <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm text-center">
-                <div className="max-w-md mx-auto">
-                  <h2 className="text-3xl font-bold mb-4 text-slate-900">Health Document Analyzer</h2>
-                  <p className="text-slate-600 mb-10">Upload a photo of your medical bill or prescription to see simplified results and cost savings.</p>
-                  
-                  <FileUploader 
-                    onFileSelect={handleFileSelect} 
-                    selectedFile={state.file} 
-                    onClear={() => setState(p => ({ ...p, file: null, preview: null }))} 
-                  />
-                  
-                  {state.file && (
-                    <button 
-                      onClick={handleAnalyze} 
-                      className="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
-                    >
-                      <Sparkles className="w-5 h-5" />
-                      <span>Start Prescription IQ Scan</span>
-                    </button>
-                  )}
-                  
-                  {state.error && (
-                    <div className="mt-6 flex items-center justify-center space-x-2 text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100 animate-in fade-in zoom-in duration-300">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <p className="text-sm font-bold">{state.error}</p>
-                    </div>
-                  )}
-                </div>
+                <h2 className="text-3xl font-bold mb-4">Document Analyzer</h2>
+                <p className="text-slate-600 mb-10">Upload your bill or prescription for a simple explanation.</p>
+                <FileUploader 
+                  onFileSelect={handleFileSelect} 
+                  selectedFile={state.file} 
+                  onClear={() => setState(p => ({ ...p, file: null, preview: null }))} 
+                />
+                {state.file && (
+                  <button 
+                    onClick={handleAnalyze} 
+                    className="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center space-x-3"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>Run IQ Scan</span>
+                  </button>
+                )}
+                {state.error && (
+                  <div className="mt-6 flex items-center justify-center space-x-2 text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100">
+                    <AlertCircle className="w-5 h-5" />
+                    <p className="text-sm font-bold">{state.error}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
